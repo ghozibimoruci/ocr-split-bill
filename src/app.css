@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+#app-wrapper {
+  max-width: calc(100vw - 32px);
+  width: 576px;
+  padding: 0 16px;
+  height: 100vh;
+  max-height: 100dvh;
+  position: relative;
+}
