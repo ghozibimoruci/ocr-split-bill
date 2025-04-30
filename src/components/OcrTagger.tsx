@@ -2,6 +2,9 @@ import { createWorker } from 'tesseract.js';
 import { useRef, useState } from 'preact/hooks';
 import { Word } from 'tesseract.js';
 import './OcrTagger.css';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem } from '../redux/actions';
+import { ItemProps } from '../redux/reducer';
 
 interface TaggedWord extends Word {
   label?: string;
@@ -22,11 +25,10 @@ const OcrTagger = () => {
     price: "",
     qty: "",
   });
-  const [itemList, setItemList] = useState<{
-    name: string;
-    price: string;
-    qty: string;
-  }[]>([]);
+  
+  const dispatch = useDispatch();
+  const itemList = useSelector((state: ItemProps[]) => state);
+  ;
   const [inputValue, setInputValue] = useState<string>("");
 
   const handleFileChange = async (e: Event) => {
@@ -46,12 +48,6 @@ const OcrTagger = () => {
       await worker.initialize('eng');
       const { data } = await worker.recognize(result);
       const boxesToBe = data.words as TaggedWord[];
-      boxesToBe.forEach(
-        box => {
-          console.log("x position: ", box.bbox.x0);
-          console.log("y position: ", box.bbox.y0);
-        }
-      )
       setBoxes(boxesToBe);
     };
     reader.readAsDataURL(file);
@@ -80,37 +76,39 @@ const OcrTagger = () => {
     return [scaleX, scaleY];
   };
 
-  const onCancel = () => {
-    setItemAttribute("name");
-    setItemDetail({
-      name: "",
-      price: "",
-      qty: "",
-    });
+  const onClear = () => {
     setInputValue("");
   }
 
   const submitAttrItem = () => {
     setItemAttribute(itemAttribute == "name" ? "price" : itemAttribute == "price" ? "qty" : "name");
-    setItemDetail(prev => ({
-      ...prev,
-      [itemAttribute]: inputValue,
-    }));
+    let itemDetailToBe: ItemProps = {...itemDetail};
+    setItemDetail(prev => {
+      itemDetailToBe = {
+        ...prev,
+        ...(itemAttribute == "name" ?
+        {name: inputValue} : itemAttribute == "price" ?
+        {price: inputValue} :
+        {qty: inputValue}),
+      }
+      return itemDetailToBe;
+    });
     if(itemAttribute == "qty"){
-      setItemList(prev => [...prev, itemDetail]);
+      dispatch(addItem(itemDetailToBe))
+      setItemDetail({
+        name: "",
+        price: "",
+        qty: "",
+      })
     }
-    setItemDetail({
-      name: "",
-      price: "",
-      qty: "",
-    })
     setInputValue("");
   }
 
   const onClickHighlight = (text: string) => {
-    setInputValue(prev => (
-      prev.length > 0 ? prev + " " + text : text
-    ));
+    setInputValue(prev => {
+      const textToBe = prev.length > 0 ? prev + " " + text : text;
+      return itemAttribute == "qty" ? parseInt(textToBe).toString() : textToBe;
+    });
   }
 
   return (
@@ -129,35 +127,44 @@ const OcrTagger = () => {
           }
           {
             imageSrc && (
-              <div className="position-absolute top-0 start-0 w-100 h-100">
-                <div id="position-relative d-inline">
-                  <img src={imageSrc} ref={imageRef} style={{ maxWidth: '100%' }} />
-                  {
-                    boxes.map((word, i) => {
-                      const [scaleX, scaleY] = getScale();
-                      const x = word.bbox.x0 * scaleX;
-                      const y = word.bbox.y0 * scaleY;
-                      const width = (word.bbox.x1 - word.bbox.x0) * scaleX;
-                      const height = (word.bbox.y1 - word.bbox.y0) * scaleY;
-                      
-                      return (
-                        <div
-                          key={i}
-                          className="highlight-box"
-                          style={{
-                            left: `${x}px`,
-                            top: `${y}px`,
-                            width: `${width}px`,
-                            height: `${height}px`,
-                          }}
-                          onClick={() => handleClickBox(word)}
-                        >
-                          {word.label ? `${word.label}: ${word.text}` : word.text}
-                        </div>
-                      );
-                    })}
+              <>
+                <div className="position-absolute top-0 start-0 w-100 h-100">
+                  <div id="position-relative d-inline">
+                    <img src={imageSrc} ref={imageRef} style={{ maxWidth: '100%' }} />
+                    {
+                      boxes.map((word, i) => {
+                        const [scaleX, scaleY] = getScale();
+                        const x = word.bbox.x0 * scaleX;
+                        const y = word.bbox.y0 * scaleY;
+                        const width = (word.bbox.x1 - word.bbox.x0) * scaleX;
+                        const height = (word.bbox.y1 - word.bbox.y0) * scaleY;
+                        
+                        return (
+                          <div
+                            key={i}
+                            className="highlight-box"
+                            style={{
+                              left: `${x}px`,
+                              top: `${y}px`,
+                              width: `${width}px`,
+                              height: `${height}px`,
+                            }}
+                            onClick={() => handleClickBox(word)}
+                          >
+                            {word.label ? `${word.label}: ${word.text}` : word.text}
+                          </div>
+                        );
+                      })}
+                  </div>
                 </div>
-              </div>
+                {
+                  itemList.length > 0 && (
+                    <button className="btn btn-secondary position-absolute top-0 end-0 z-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasItemList" aria-controls="offcanvasItemList">
+                      See Item List
+                    </button>
+                  )
+                }
+              </>
             )
           }
         </div>
@@ -172,7 +179,7 @@ const OcrTagger = () => {
               <div className="col-12">
                 <div class="input-group">
                   <input type="text" class="form-control" value={inputValue} onChange={e => setInputValue((e.target as HTMLInputElement).value)} placeholder={`Input ${itemAttribute == "name" ? "Product Name" : itemAttribute == "price" ? "Price" : "Quantity"}`}/>
-                  <button class="btn btn-danger" type="button" onClick={onCancel}>Cancel</button>
+                  <button class="btn btn-danger" type="button" onClick={onClear}>Clear</button>
                   <button class="btn btn-primary" type="button" onClick={submitAttrItem}>Submit</button>
                 </div>
               </div>
