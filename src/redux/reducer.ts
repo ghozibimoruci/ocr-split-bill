@@ -4,7 +4,6 @@ import { ADD_ITEM, REMOVE_ITEM } from "./actions";
 export interface ItemProps {
   name: string;
   price: string;
-  qty: string;
 }
 
 const initialState: ItemProps[] = [];

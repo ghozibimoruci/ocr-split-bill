@@ -1,9 +1,19 @@
 import { useSelector } from "react-redux";
 import { ItemProps } from "../redux/reducer";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import "./PersonList.css";
 
-const PersonList = () => {
+const PersonList = (props: {setPeoplePayList: (peoplePayList: {
+  name: string;
+  total: number;
+  tax: number;
+  items: {
+    name: string;
+    price: string;
+  }[];
+}[]) => void}) => {
+  const { setPeoplePayList } = props;
+
   const [inputValue, setInputValue] = useState<string>("");
   const [people, setPeople] = useState<string[]>([]);
   const [itemList, setItemList] = useState<{
@@ -17,6 +27,7 @@ const PersonList = () => {
         people: []
       }))
   );
+  const [itemVoidLength, setItemVoidLength] = useState<number>(0);
 
   const onClickPeopleButton = (itemIndex: number, peopleIndex: number) => {
     setItemList(prev => {
@@ -55,6 +66,44 @@ const PersonList = () => {
     });
     setInputValue("");
   }
+
+  const startSplitBill = () => {
+    const splitBillPerson: {
+      name: string;
+      total: number;
+      tax: number;
+      items: {
+        name: string;
+        price: string;
+      }[]
+    }[] = [...people].map(ppl => ({
+      name: ppl,
+      tax: 0,
+      total: 0,
+      items: []
+    }));
+    splitBillPerson.forEach(
+      (ppl, idx) => {
+        itemList.forEach(
+          (item) => {
+            if(item.people.includes(idx)){
+              const pplToPay = parseFloat(item.price) / item.people.length;
+              ppl.total += parseFloat(pplToPay.toFixed(3));
+              ppl.items.push({
+                name: item.name,
+                price: pplToPay.toFixed(3)
+              })
+            }
+          }
+        )
+      }
+    );
+    setPeoplePayList(splitBillPerson);
+  }
+
+  useEffect(() => {
+    setItemVoidLength(itemList.filter(item => item.people.length < 1).length);
+  }, [itemList])
 
   return (
     <>
@@ -100,12 +149,17 @@ const PersonList = () => {
           <div className="col-12 mb-3">
             Input People Name
           </div>
-          <div className="col-12">
+          <div className="col-12 mb-3">
             <div class="input-group">
               <input type="text" class="form-control" value={inputValue} onChange={e => setInputValue((e.target as HTMLInputElement).value)} placeholder={`Input People Name`}/>
               <button class="btn btn-danger" type="button" onClick={onClear}>Clear</button>
               <button class="btn btn-primary" type="button" onClick={onSubmitPeople}>Submit</button>
             </div>
+          </div>
+          <div className="col-12">
+            <button disabled={itemVoidLength > 0} className={`btn ${itemVoidLength > 0 ? "btn-secondary":"btn-success"} w-100`} type="button" onClick={startSplitBill}>
+              Share Bill
+            </button>
           </div>
         </div>
       </div>

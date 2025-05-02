@@ -31,7 +31,7 @@ const ItemList = (props : {setPageMode: (mode: PageModeEnum) => void}) => {
               (item, idx) => (
                 <div key={idx} className="row py-2 align-items-center">
                   <div className="col">
-                    {item.name} ({item.qty}) - {item.price}
+                    {item.name} - {item.price}
                   </div>
                   <div className="col-auto">
                     <button type="button" className="btn btn-danger" onClick={() => handleDeleteItem(idx)}>Delete</button>

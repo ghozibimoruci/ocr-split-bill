@@ -2,7 +2,7 @@
 export const ADD_ITEM = "ADD_ITEM";
 export const REMOVE_ITEM = "REMOVE_ITEM";
 
-export const addItem = (item: { name: string; price: string; qty: string }) => ({
+export const addItem = (item: { name: string; price: string; }) => ({
   type: ADD_ITEM,
   payload: item,
 });
