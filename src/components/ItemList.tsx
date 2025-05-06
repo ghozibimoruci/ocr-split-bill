@@ -2,7 +2,6 @@ import './ItemList.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { ItemProps } from '../redux/reducer';
 import { removeItem } from '../redux/actions';
-import { useEffect } from 'preact/hooks';
 import { PageModeEnum } from '../props/props-base';
 
 const ItemList = (props : {setPageMode: (mode: PageModeEnum) => void}) => {
@@ -13,10 +12,6 @@ const ItemList = (props : {setPageMode: (mode: PageModeEnum) => void}) => {
   const handleDeleteItem = (index: number) => {
     dispatch(removeItem(index))
   }
-
-  useEffect(() => {
-    console.log(itemList);
-  }, [itemList])
 
   return (
     <>
