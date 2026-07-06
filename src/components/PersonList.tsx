@@ -19,12 +19,7 @@ const PersonList = (props: {
   const { setPeoplePayList } = props;
 
   const [inputValue, setInputValue] = useState<string>("");
-  const [people, setPeople] = useState<string[]>([
-    "hanif",
-    "goji",
-    "anti",
-    "eko"
-  ]);
+  const [people, setPeople] = useState<string[]>([]);
   const [itemList, setItemList] = useState<
     {
       name: string;

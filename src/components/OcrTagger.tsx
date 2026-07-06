@@ -1,11 +1,10 @@
 import { createWorker } from "tesseract.js";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { Word } from "tesseract.js";
 import "./OcrTagger.css";
 import { useDispatch, useSelector } from "react-redux";
 import { addItem } from "../redux/actions";
 import { ItemProps } from "../redux/reducer";
-import { PageModeEnum } from "../props/props-base";
 
 interface TaggedWord extends Word {
   label?: string;
